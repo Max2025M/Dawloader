@@ -41,7 +41,7 @@ jobs:
       - name: 🔧 Instalar FFmpeg
         run: sudo apt update && sudo apt install -y ffmpeg
 
-      - name: ⚙️ Executar script baixar_videos.js
+      - name: ⚙️ Executar script Node.js
         run: |
           node script.js "${{ github.event.inputs.file_url }}" "${{ github.event.inputs.start_time }}" "${{ github.event.inputs.end_time }}" "${{ github.event.inputs.destino }}"
 
