@@ -4,9 +4,10 @@ const path = require('path');
 const https = require('https');
 const { spawnSync } = require('child_process');
 
+// Argumentos enviados pelo GitHub Actions via workflow_dispatch
 const VIDEO_URL = process.argv[2];
-const START_TIME = process.argv[3] || null;
-const END_TIME = process.argv[4] || null;
+const START_TIME = process.argv[3] || '';
+const END_TIME = process.argv[4] || '';
 const DESTINO = process.argv[5] || 'drive';
 
 const SERVER_URL = 'https://livestream.ct.ws/M/upload.php';
