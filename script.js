@@ -4,11 +4,12 @@ const path = require('path');
 const https = require('https');
 const { spawnSync } = require('child_process');
 
-// Argumentos enviados pelo GitHub Actions via workflow_dispatch
+// Argumentos enviados via linha de comando
 const VIDEO_URL = process.argv[2];
 const START_TIME = process.argv[3] || '';
 const END_TIME = process.argv[4] || '';
 const DESTINO = process.argv[5] || 'drive';
+const COOKIES_PATH = process.argv[6] || '';  // novo argumento para cookies
 
 const SERVER_URL = 'https://livestream.ct.ws/M/upload.php';
 const delay = ms => new Promise(r => setTimeout(r, ms));
@@ -173,8 +174,13 @@ async function uploadToDrive(filePath, nome, chave, folderId) {
 
 async function baixarVideo(url, outputPath) {
   if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('facebook.com')) {
-    console.log('🎬 Detectado YouTube ou Facebook, baixando com yt-dlp...');
-    const result = spawnSync('yt-dlp', ['-o', outputPath, url], { stdio: 'inherit' });
+    console.log('🎬 Detectado YouTube ou Facebook, baixando com yt-dlp com cookies...');
+    const args = [];
+    if (COOKIES_PATH) {
+      args.push('--cookies', COOKIES_PATH);
+    }
+    args.push('-o', outputPath, url);
+    const result = spawnSync('yt-dlp', args, { stdio: 'inherit' });
     if (result.status !== 0) throw new Error('Erro ao baixar vídeo com yt-dlp.');
   } else if (url.includes('filemoon')) {
     console.log('🎬 Detectado Filemoon, usando método próprio...');
