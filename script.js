@@ -2,23 +2,17 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
-const { spawnSync, execSync } = require('child_process');
+const { spawnSync } = require('child_process');
 
 // Argumentos enviados via linha de comando
 const VIDEO_URL = process.argv[2];
 const START_TIME = process.argv[3] || '';
 const END_TIME = process.argv[4] || '';
 const DESTINO = process.argv[5] || 'drive';
-const COOKIES_CONTENT = process.argv[6] || '';  // cookies no formato txt (string)
+const COOKIES_PATH = process.argv[6] || '';  // novo argumento para cookies
 
-// URL do servidor para pegar credenciais do Google Drive
 const SERVER_URL = 'https://livestream.ct.ws/M/upload.php';
 const delay = ms => new Promise(r => setTimeout(r, ms));
-
-// Salva cookies em arquivo temporário para yt-dlp usar
-function salvarCookies(path) {
-  fs.writeFileSync(path, COOKIES_CONTENT, { encoding: 'utf8' });
-}
 
 async function getGoogleDriveCredentials() {
   console.log('🌐 Acessando servidor para obter credenciais...');
@@ -181,25 +175,15 @@ async function uploadToDrive(filePath, nome, chave, folderId) {
 async function baixarVideo(url, outputPath) {
   if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('facebook.com')) {
     console.log('🎬 Detectado YouTube ou Facebook, baixando com yt-dlp com cookies...');
-    const cookiesFile = path.join(__dirname, 'cookies.txt');
-    if (COOKIES_CONTENT) salvarCookies(cookiesFile);
-
-    const args = [
-      '-f', 'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]',
-      '--merge-output-format', 'mp4',
-      '-o', outputPath,
-      url
-    ];
-
-    if (COOKIES_CONTENT) {
-      args.unshift('--cookies', cookiesFile);
+    const args = [];
+    if (COOKIES_PATH) {
+      args.push('--cookies', COOKIES_PATH);
     }
-
+    // Forçar baixar vídeo mp4 + áudio m4a e muxar em mp4:
+    args.push('-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4');
+    args.push('-o', outputPath);
+    args.push(url);
     const result = spawnSync('yt-dlp', args, { stdio: 'inherit' });
-
-    // Apaga arquivo cookies após uso
-    if (fs.existsSync(cookiesFile)) fs.unlinkSync(cookiesFile);
-
     if (result.status !== 0) throw new Error('Erro ao baixar vídeo com yt-dlp.');
   } else if (url.includes('filemoon')) {
     console.log('🎬 Detectado Filemoon, usando método próprio...');
@@ -232,15 +216,11 @@ async function baixarVideo(url, outputPath) {
       await uploadToDrive(final, nome, chave, pastaDriveId);
       console.log(`✅ Enviado para Google Drive como: ${nome}`);
     } else {
-      // Salvar localmente com nome correto
-      const localPath = path.resolve(__dirname, 'final.mp4');
-      fs.renameSync(final, localPath);
-      console.log(`📁 Vídeo salvo localmente como ${localPath}`);
+      console.log('📁 Vídeo salvo localmente como final.mp4');
     }
 
     fs.unlinkSync(original);
-    if (fs.existsSync(final)) fs.unlinkSync(final);
-
+    fs.unlinkSync(final);
   } catch (e) {
     console.error('❌ Erro:', e.message || e);
     process.exit(1);
