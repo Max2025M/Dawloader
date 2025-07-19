@@ -221,6 +221,10 @@ async function baixarVideo(url, outputPath) {
 
     fs.unlinkSync(original);
     fs.unlinkSync(final);
+
+    console.log('🏁 Processo finalizado.');
+    process.exit(0);
+
   } catch (e) {
     console.error('❌ Erro:', e.message || e);
     process.exit(1);
