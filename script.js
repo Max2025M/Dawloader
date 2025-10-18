@@ -14,6 +14,7 @@ const COOKIES_PATH = process.argv[6] || '';  // novo argumento para cookies
 const SERVER_URL = 'https://livestream.ct.ws/M/upload.php';
 const delay = ms => new Promise(r => setTimeout(r, ms));
 
+// --- Funções ---
 async function getGoogleDriveCredentials() {
   console.log('🌐 Acessando servidor para obter credenciais...');
   const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
@@ -176,10 +177,7 @@ async function baixarVideo(url, outputPath) {
   if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('facebook.com')) {
     console.log('🎬 Detectado YouTube ou Facebook, baixando com yt-dlp com cookies...');
     const args = [];
-    if (COOKIES_PATH) {
-      args.push('--cookies', COOKIES_PATH);
-    }
-    // Forçar baixar vídeo mp4 + áudio m4a e muxar em mp4:
+    if (COOKIES_PATH) args.push('--cookies', COOKIES_PATH);
     args.push('-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4');
     args.push('-o', outputPath);
     args.push(url);
@@ -196,11 +194,18 @@ async function baixarVideo(url, outputPath) {
   }
 }
 
+// --- Fluxo principal ---
 (async () => {
   try {
     if (!VIDEO_URL) throw new Error('Informe o link do vídeo.');
 
-    const { chave, pastaDriveId } = await getGoogleDriveCredentials();
+    let chave, pastaDriveId;
+    // Somente obter credenciais se não for YouTube/Facebook
+    if (!VIDEO_URL.includes('youtube.com') && !VIDEO_URL.includes('youtu.be') && !VIDEO_URL.includes('facebook.com')) {
+      const cred = await getGoogleDriveCredentials();
+      chave = cred.chave;
+      pastaDriveId = cred.pastaDriveId;
+    }
 
     const original = path.join(__dirname, 'original.mp4');
     const final = path.join(__dirname, 'final.mp4');
@@ -212,6 +217,7 @@ async function baixarVideo(url, outputPath) {
     reencode(original, final);
 
     if (DESTINO === 'drive') {
+      if (!chave || !pastaDriveId) throw new Error('Credenciais do Drive não encontradas.');
       const nome = `video_240p_${Date.now()}.mp4`;
       await uploadToDrive(final, nome, chave, pastaDriveId);
       console.log(`✅ Enviado para Google Drive como: ${nome}`);
