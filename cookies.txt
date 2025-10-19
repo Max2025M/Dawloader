@@ -1,11 +1,10 @@
 # Netscape HTTP Cookie File
-# This file was generated for yt-dlp usage (Secure=false variant)
+# This file was generated for yt-dlp usage
 # Domain	Include_Subdomains	Path	Secure	Expiration	Name	Value
-
-.youtube.com	TRUE	/	FALSE	2147483647	PREF	tz=Africa.Maputo
-.youtube.com	TRUE	/	FALSE	2147483647	APISID	_zFVAqkAIET5n4bM/ApK6y9bxCzoynjOjz
-.youtube.com	TRUE	/	FALSE	2147483647	SAPISID	6JSmJMHFNw8lZ-1L/AyjucdahqmZg1c3wi
-.youtube.com	TRUE	/	FALSE	2147483647	__Secure-1PAPISID	6JSmJMHFNw8lZ-1L/AyjucdahqmZg1c3wi
-.youtube.com	TRUE	/	FALSE	2147483647	__Secure-3PAPISID	6JSmJMHFNw8lZ-1L/AyjucdahqmZg1c3wi
-.youtube.com	TRUE	/	FALSE	2147483647	SID	g.a0002gjtK89B1sRPtkGnJsKHTK_3hc_PLPGU9GeesSBcwfiPf6zQ-A2m0eR6pv0YocxsT7eQ3gACgYKAWESARcSFQHGX2MiLEB8FtJDtNJHgd-JfiPnXRoVAUF8yKpYTybnjRvNSIGNFi5UhfC50076
-.youtube.com	TRUE	/	FALSE	2147483647	SIDCC	AKEyXzUb2fpMgqiEFm3WUTDik-9i0mYTIjI8dLQr_vqfOfPPsqWD2lc7rW3SX2C6zZ0aIFg-
+.youtube.com	TRUE	/	FALSE	2147483647	PREF	tz=Africa.Maputo&f5=30000
+.youtube.com	TRUE	/	FALSE	2147483647	APISID	fFT981llyPzp_7qz/AEXT_eiERQu_p2mDW
+.youtube.com	TRUE	/	FALSE	2147483647	SAPISID	XK-zA-lAYjH1FDLJ/AqSzFszqkdg8P92E8
+.youtube.com	TRUE	/	FALSE	2147483647	__Secure-1PAPISID	XK-zA-lAYjH1FDLJ/AqSzFszqkdg8P92E8
+.youtube.com	TRUE	/	FALSE	2147483647	__Secure-3PAPISID	XK-zA-lAYjH1FDLJ/AqSzFszqkdg8P92E8
+.youtube.com	TRUE	/	FALSE	2147483647	SID	g.a0002gjtK-egRUoYXtWLYldTMl1C9TMHY77EdpnxbjzFLF9Tsxgpe-KXIdsPlDXMwt6Wu9sM-QACgYKAXISARcSFQHGX2MiH2L1ezyzUhJPQA0A630JcBoVAUF8yKomzuDCfKPNfuUxPRFEIR5F0076
+.youtube.com	TRUE	/	FALSE	2147483647	SIDCC	AKEyXzXIAMATOHuqBQuh_eX_Hc_4MQmQ0siOw-ot688WovZzl_jwFgYSMcyCgO0PIY3vzRzP
