@@ -1,4 +1,11 @@
 # Netscape HTTP Cookie File
-.youtube.com	TRUE	/	FALSE	2147483647	SID	g.a0002gjtK89B1sRPtkGnJsKHTK_3hc_PLPGU9GeesSBcwfiPf6zQ-A2m0uR6pv0YocxsT7eQ3gACgYKAWESARcSFQHG_X2MiLEB8FtJDtNJHgd-JfiPnXRoVATF8yKp
+# This file was generated for yt-dlp usage (Secure=false variant)
+# Domain	Include_Subdomains	Path	Secure	Expiration	Name	Value
+
+.youtube.com	TRUE	/	FALSE	2147483647	PREF	tz=Africa.Maputo
 .youtube.com	TRUE	/	FALSE	2147483647	APISID	_zFVAqkAIET5n4bM/ApK6y9bxCzoynjOjz
 .youtube.com	TRUE	/	FALSE	2147483647	SAPISID	6JSmJMHFNw8lZ-1L/AyjucdahqmZg1c3wi
+.youtube.com	TRUE	/	FALSE	2147483647	__Secure-1PAPISID	6JSmJMHFNw8lZ-1L/AyjucdahqmZg1c3wi
+.youtube.com	TRUE	/	FALSE	2147483647	__Secure-3PAPISID	6JSmJMHFNw8lZ-1L/AyjucdahqmZg1c3wi
+.youtube.com	TRUE	/	FALSE	2147483647	SID	g.a0002gjtK89B1sRPtkGnJsKHTK_3hc_PLPGU9GeesSBcwfiPf6zQ-A2m0eR6pv0YocxsT7eQ3gACgYKAWESARcSFQHGX2MiLEB8FtJDtNJHgd-JfiPnXRoVAUF8yKpYTybnjRvNSIGNFi5UhfC50076
+.youtube.com	TRUE	/	FALSE	2147483647	SIDCC	AKEyXzUb2fpMgqiEFm3WUTDik-9i0mYTIjI8dLQr_vqfOfPPsqWD2lc7rW3SX2C6zZ0aIFg-
