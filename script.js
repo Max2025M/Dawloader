@@ -9,12 +9,44 @@ const VIDEO_URL = process.argv[2];
 const START_TIME = process.argv[3] || '';
 const END_TIME = process.argv[4] || '';
 const DESTINO = process.argv[5] || 'drive';
-const COOKIES_PATH = process.argv[6] || '';  // novo argumento para cookies
 
 const SERVER_URL = 'https://livestream.ct.ws/M/upload.php';
 const delay = ms => new Promise(r => setTimeout(r, ms));
 
-// --- Funções ---
+// caminho para gerar cookies a partir do secret
+const GENERATED_COOKIES_FILE = path.join(__dirname, 'cookies.txt');
+
+function isProbablyBase64(s) {
+  return /^[A-Za-z0-9+/=]+$/.test(s.replace(/\s+/g, '')) && !s.includes('\n') && !s.includes('\t');
+}
+
+function writeCookiesFileFromEnv(envVar) {
+  if (!envVar) return false;
+  try {
+    let content = envVar;
+    if (isProbablyBase64(content)) {
+      try { content = Buffer.from(content, 'base64').toString('utf8'); } catch { content = envVar; }
+    }
+    fs.writeFileSync(GENERATED_COOKIES_FILE, content, { encoding: 'utf8', mode: 0o600 });
+    console.log(`✅ cookies.txt gerado a partir do secret em: ${GENERATED_COOKIES_FILE}`);
+    return true;
+  } catch (err) {
+    console.warn('⚠️ Falha ao gerar cookies.txt a partir do secret:', err.message || err);
+    return false;
+  }
+}
+
+async function ensureCookiesAvailable() {
+  const envCookies = process.env.YOUTUBE_COOKIES;
+  if (envCookies) {
+    const ok = writeCookiesFileFromEnv(envCookies);
+    if (ok) return GENERATED_COOKIES_FILE;
+  }
+  console.log('ℹ️ Nenhum cookies encontrado. Baixando sem autenticação.');
+  return '';
+}
+
+// --- Funções de download, reencode e upload ---
 async function getGoogleDriveCredentials() {
   console.log('🌐 Acessando servidor para obter credenciais...');
   const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
@@ -25,10 +57,8 @@ async function getGoogleDriveCredentials() {
     try { return JSON.parse(document.body.innerText); } catch { return null; }
   });
   await browser.close();
-
-  if (!raw || raw.estado !== 'ok' || !raw.rclone || !raw.pastaDriveId) {
+  if (!raw || raw.estado !== 'ok' || !raw.rclone || !raw.pastaDriveId)
     throw new Error('Credenciais inválidas');
-  }
 
   const chave = {
     client_id: raw.rclone.client_id || raw.rclone['ID do cliente'],
@@ -36,7 +66,6 @@ async function getGoogleDriveCredentials() {
     refresh_token: raw.rclone.token?.refresh_token || raw.rclone['update_token'],
     token_uri: 'https://oauth2.googleapis.com/token'
   };
-
   return { chave, pastaDriveId: raw.pastaDriveId };
 }
 
@@ -57,11 +86,8 @@ async function getVideoUrlFromFilemoon(url) {
       window.jwplayer = () => ({
         setup: config => {
           if (config.file && formatos.some(f => config.file.includes(f))) urls.add(config.file);
-          if (Array.isArray(config.sources)) {
-            config.sources.forEach(src => {
-              if (src.file && formatos.some(f => src.file.includes(f))) urls.add(src.file);
-            });
-          }
+          if (Array.isArray(config.sources))
+            config.sources.forEach(src => { if (src.file && formatos.some(f => src.file.includes(f))) urls.add(src.file); });
           resolve(Array.from(urls));
         }
       });
@@ -92,22 +118,15 @@ async function refreshAccessToken(chave) {
       refresh_token: chave.refresh_token,
       grant_type: 'refresh_token'
     }).toString();
-
     const req = https.request('https://oauth2.googleapis.com/token', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Content-Length': data.length
-      }
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': data.length }
     }, res => {
       let body = '';
       res.on('data', chunk => body += chunk);
       res.on('end', () => {
-        try {
-          const json = JSON.parse(body);
-          if (json.access_token) resolve(json.access_token);
-          else reject(new Error(`Erro ao obter token: ${body}`));
-        } catch { reject(new Error('Erro ao analisar resposta de token')); }
+        try { const json = JSON.parse(body); if (json.access_token) resolve(json.access_token); else reject(new Error(`Erro ao obter token: ${body}`)); }
+        catch { reject(new Error('Erro ao analisar resposta de token')); }
       });
     });
     req.on('error', reject);
@@ -141,12 +160,10 @@ async function uploadToDrive(filePath, nome, chave, folderId) {
   let offset = 0;
   let token = await refreshAccessToken(chave);
   let uploadUrl = await createUploadUrl(nome, token, folderId);
-
   while (offset < size) {
     const end = Math.min(offset + CHUNK_SIZE, size) - 1;
     const buffer = Buffer.alloc(end - offset + 1);
     fs.readSync(fd, buffer, 0, buffer.length, offset);
-
     await new Promise((resolve, reject) => {
       const req = https.request(uploadUrl, {
         method: 'PUT',
@@ -156,35 +173,30 @@ async function uploadToDrive(filePath, nome, chave, folderId) {
           'Content-Range': `bytes ${offset}-${end}/${size}`
         }
       }, res => {
-        if (![200, 201, 308].includes(res.statusCode)) {
-          reject(new Error(`Erro no chunk: ${res.statusCode}`));
-        } else {
-          resolve();
-        }
+        if (![200, 201, 308].includes(res.statusCode)) reject(new Error(`Erro no chunk: ${res.statusCode}`));
+        else resolve();
       });
       req.on('error', reject);
       req.write(buffer); req.end();
     });
-
     offset = end + 1;
   }
-
   fs.closeSync(fd);
   console.log('✅ Upload finalizado!');
 }
 
-async function baixarVideo(url, outputPath) {
+async function baixarVideo(url, outputPath, cookiesPath) {
   if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('facebook.com')) {
-    console.log('🎬 Detectado YouTube ou Facebook, baixando com yt-dlp com cookies...');
+    if (cookiesPath) console.log('🎬 Baixando YouTube/Facebook com cookies...');
+    else console.log('🎬 Baixando YouTube/Facebook sem cookies...');
     const args = [];
-    if (COOKIES_PATH) args.push('--cookies', COOKIES_PATH);
+    if (cookiesPath) args.push('--cookies', cookiesPath);
     args.push('-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4');
     args.push('-o', outputPath);
     args.push(url);
     const result = spawnSync('yt-dlp', args, { stdio: 'inherit' });
     if (result.status !== 0) throw new Error('Erro ao baixar vídeo com yt-dlp.');
   } else if (url.includes('filemoon')) {
-    console.log('🎬 Detectado Filemoon, usando método próprio...');
     const videoUrl = await getVideoUrlFromFilemoon(url);
     console.log('🎯 Link direto do vídeo:', videoUrl);
     const result = spawnSync('ffmpeg', ['-i', videoUrl, '-c', 'copy', '-y', outputPath], { stdio: 'inherit' });
@@ -199,8 +211,9 @@ async function baixarVideo(url, outputPath) {
   try {
     if (!VIDEO_URL) throw new Error('Informe o link do vídeo.');
 
+    const cookiesPath = await ensureCookiesAvailable();
+
     let chave, pastaDriveId;
-    // Somente obter credenciais se não for YouTube/Facebook
     if (!VIDEO_URL.includes('youtube.com') && !VIDEO_URL.includes('youtu.be') && !VIDEO_URL.includes('facebook.com')) {
       const cred = await getGoogleDriveCredentials();
       chave = cred.chave;
@@ -210,7 +223,7 @@ async function baixarVideo(url, outputPath) {
     const original = path.join(__dirname, 'original.mp4');
     const final = path.join(__dirname, 'final.mp4');
 
-    await baixarVideo(VIDEO_URL, original);
+    await baixarVideo(VIDEO_URL, original, cookiesPath);
 
     if (!fs.existsSync(original)) throw new Error('Erro ao baixar vídeo.');
 
