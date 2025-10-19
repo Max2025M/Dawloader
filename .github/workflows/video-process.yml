@@ -27,9 +27,14 @@ jobs:
       - name: 🛒 Checkout do repositório
         uses: actions/checkout@v4
 
+      # 🔒 Cria o arquivo de cookies sem quebrar formatação
       - name: 📄 Criar arquivo cookies.txt com o conteúdo do segredo
+        shell: bash
         run: |
-          printf "%s" "${{ secrets.YOUTUBE_COOKIES }}" > cookies.txt
+          echo "${{ secrets.YOUTUBE_COOKIES }}" | base64 --decode > cookies.txt
+          echo "✅ Arquivo cookies.txt criado com sucesso!"
+        env:
+          YOUTUBE_COOKIES: ${{ secrets.YOUTUBE_COOKIES }}
 
       - name: 🟨 Instalar Node.js
         uses: actions/setup-node@v4
@@ -47,7 +52,12 @@ jobs:
 
       - name: ⚙️ Executar script Node.js
         run: |
-          node script.js "${{ github.event.inputs.file_url }}" "${{ github.event.inputs.start_time }}" "${{ github.event.inputs.end_time }}" "${{ github.event.inputs.destino }}" "cookies.txt"
+          node script.js \
+            "${{ github.event.inputs.file_url }}" \
+            "${{ github.event.inputs.start_time }}" \
+            "${{ github.event.inputs.end_time }}" \
+            "${{ github.event.inputs.destino }}" \
+            "cookies.txt"
 
       - name: 📦 Salvar como artefato (se destino for local)
         if: ${{ github.event.inputs.destino == 'local' }}
