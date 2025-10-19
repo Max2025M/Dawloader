@@ -27,11 +27,16 @@ jobs:
       - name: 🛒 Checkout do repositório
         uses: actions/checkout@v4
 
-      # 🔒 Cria o arquivo cookies.txt preservando exatamente o conteúdo do Secret
-      - name: 📄 Criar arquivo cookies.txt com o conteúdo do segredo
+      # 📄 Criar arquivo cookies.txt diretamente com os cookies
+      - name: 📄 Criar cookies.txt
         run: |
-          echo -e "${{ secrets.YOUTUBE_COOKIES }}" > cookies.txt
-          echo "✅ cookies.txt criado preservando exatamente o conteúdo do Secret"
+          cat > cookies.txt <<EOL
+.youtube.com	TRUE	/	TRUE	2147483647	SID	g.a0002gjtK89B1sRPtkGnJsKHTK_3hc_PLPGU9GeesSBcwfiPf6zQ-A2m0uR6pv0YocxsT7eQ3gACgYKAWESARcSFQHG_X2MiLEB8FtJDtNJHgd-JfiPnXRoVATF8yKpYTybnjRvNSIGNFi5UhfC50076
+.youtube.com	TRUE	/	TRUE	2147483647	APISID	_zFVAqkAIET5n4bM/ApK6y9bxCzoynjOjz
+.youtube.com	TRUE	/	TRUE	2147483647	SAPISID	6JSmJMHFNw8lZ-1L/AyjucdahqmZg1c3wi
+.youtube.com	TRUE	/	TRUE	2147483647	__Secure-1PAPISID	6JSmJMHFNw8lZ-1L/AyjucdahqmZg1c3wi
+EOL
+          echo "✅ cookies.txt criado com os cookies embutidos"
 
       - name: 🟨 Instalar Node.js
         uses: actions/setup-node@v4
