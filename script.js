@@ -37,11 +37,21 @@ function writeCookiesFileFromEnv(envVar) {
 }
 
 async function ensureCookiesAvailable() {
+  const cookiesPath = path.join(__dirname, 'cookies.txt');
+  
+  // Se existir cookies.txt na pasta do script, use
+  if (fs.existsSync(cookiesPath)) {
+    console.log(`✅ Cookies encontrados em: ${cookiesPath}`);
+    return cookiesPath;
+  }
+
+  // Tenta usar variável de ambiente YOUTUBE_COOKIES
   const envCookies = process.env.YOUTUBE_COOKIES;
   if (envCookies) {
     const ok = writeCookiesFileFromEnv(envCookies);
-    if (ok) return GENERATED_COOKIES_FILE;
+    if (ok) return cookiesPath;
   }
+
   console.log('ℹ️ Nenhum cookies encontrado. Baixando sem autenticação.');
   return '';
 }
@@ -224,8 +234,6 @@ async function baixarVideo(url, outputPath, cookiesPath) {
     const final = path.join(__dirname, 'final.mp4');
 
     await baixarVideo(VIDEO_URL, original, cookiesPath);
-
-    if (!fs.existsSync(original)) throw new Error('Erro ao baixar vídeo.');
 
     reencode(original, final);
 
